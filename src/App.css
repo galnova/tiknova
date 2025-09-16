@@ -1,0 +1,200 @@
+.App {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background: #0d0d0d;
+  color: #fff;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  color: #00f2ea;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(0, 242, 234, 0.6);
+}
+
+.test-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Centers horizontally */
+  align-items: center;   /* Centers vertically */
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.test-controls button {
+  background: #00f2ea;
+  color: #111;
+  border: none;
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.test-controls button:hover {
+  background: #00c8be;
+}
+
+.events {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.event {
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.event.chat {
+  background: #1a1a1a;
+  border-left: 4px solid #00f2ea;
+}
+
+.event.small-gift {
+  background: #222;
+  border-left: 4px solid #7dd3fc;
+}
+
+.event.medium-gift {
+  background: #333;
+  border-left: 4px solid #34d399;
+}
+
+.event.big-gift {
+  background: #2a1a1a;
+  border-left: 4px solid #f87171;
+}
+
+.event.multi-gift {
+  background: #453434;
+  border-left: 4px solid #b97070;
+}
+
+.event.follow {
+  background: #1d2a4d;
+  border-left: 4px solid #3b82f6;
+}
+
+.event.like {
+  background: #2d1d4d;
+  border-left: 4px solid #a855f7;
+}
+
+.event.error {
+  background: #4d1d1d;
+  border-left: 4px solid #ef4444;
+}
+
+/* Status bar */
+.status-bar {
+  padding: 8px 12px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  transition: background 0.3s, color 0.3s, border 0.3s;
+}
+
+.status-bar.connected {
+  background: #063d2e;
+  color: #22c55e;
+  border: 1px solid #22c55e;
+  animation: pulse-green 2s infinite;
+}
+
+.status-bar.disconnected {
+  background: #3d0606;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  animation: pulse-red 1.5s infinite;
+}
+
+/* Pulse animations */
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Now Playing Banner */
+.now-playing {
+  margin: 1rem 0;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, #00f2ea 0%, #007a74 100%);
+  color: #111;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 15px;
+  box-shadow: 0 0 12px rgba(0, 242, 234, 0.4);
+  animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 242, 234, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 242, 234, 1);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(0, 242, 234, 0.6);
+  }
+}
+
+/* Voice Toggle */
+.voice-toggle {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.voice-toggle button {
+  background: #facc15; /* yellow for contrast */
+  color: #111;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.voice-toggle button:hover {
+  background: #eab308;
+  transform: scale(1.05);
+}
+
+/* New Share Event */
+.event.share {
+  background: #1a2d1a;
+  border-left: 4px solid #22c55e;
+}
