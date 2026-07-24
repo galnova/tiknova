@@ -107,6 +107,20 @@ async function connectTiktok(win, username) {
       return false;
     }
 
+    const SHARE_SPAM_THRESHOLD = 5;
+    const SHARE_STREAK_RESET_MS = 60000;
+    const shareStreaks = new Map();
+    function isShareSpam(userKey) {
+      const now = Date.now();
+      const streak = shareStreaks.get(userKey) || { count: 0, last: 0 };
+      if (now - streak.last > SHARE_STREAK_RESET_MS) streak.count = 0;
+      streak.count += 1;
+      streak.last = now;
+      shareStreaks.set(userKey, streak);
+      if (shareStreaks.size > 3000) shareStreaks.delete(shareStreaks.keys().next().value);
+      return streak.count > SHARE_SPAM_THRESHOLD;
+    }
+
     connection.on("chat", (data) => {
       if (seen(data)) return;
       const user = data.nickname || data.uniqueId || "viewer";
@@ -163,13 +177,18 @@ async function connectTiktok(win, username) {
       } else if (isShare) {
         if (seen(data)) return;
         const user = data.nickname || data.uniqueId || "viewer";
-        const ttsName = safePsString(user) || data.uniqueId || "someone";
+        const userKey = data.uniqueId || user;
+        const spam = isShareSpam(userKey);
         win.webContents.send("tiktok-event", {
           type: "share",
           user,
           message: `${user} shared!`,
+          spam,
         });
-        enqueueSpeech(`Thank you ${ttsName} for the share!`);
+        if (!spam) {
+          const ttsName = safePsString(user) || data.uniqueId || "someone";
+          enqueueSpeech(`Thank you ${ttsName} for the share!`);
+        }
       }
     });
 

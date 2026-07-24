@@ -68,7 +68,10 @@ function Home({ soundConfig }) {
 
   useEffect(() => {
     const eventHandler = (data) => {
-      setEvents((prev) => [data, ...prev].slice(0, 50));
+      const isSpamShare = data.type === "share" && data.spam;
+      if (!isSpamShare) {
+        setEvents((prev) => [data, ...prev].slice(0, 50));
+      }
 
       if (data.type === "error") {
         setError(data.msg || data.message);
@@ -84,7 +87,7 @@ function Home({ soundConfig }) {
       }
       if (data.type === "share") {
         setShareCount((prev) => prev + 1);
-        playAudio(soundConfig.share);
+        if (!isSpamShare) playAudio(soundConfig.share);
       }
       if (data.type === "gift") {
         playAudio(soundConfig[data.soundKey] || soundConfig.smallGift);
