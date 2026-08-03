@@ -235,6 +235,7 @@ async function connectTiktok(win, username) {
 
 function disconnectTiktok(win, notify = true) {
   if (tiktokConnection) {
+    try { tiktokConnection.removeAllListeners(); } catch (e) {}
     try { tiktokConnection.disconnect(); } catch (e) {}
     tiktokConnection = null;
   }
