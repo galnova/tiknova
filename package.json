@@ -2,7 +2,7 @@
   "name": "novanova",
   "version": "1.0.0",
   "description": "TikTok Live Bot with Electron + React + TTS",
-  "main": "main.js",
+  "main": "main.cjs",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"vite\" \"npx wait-on http://localhost:5173 && electron .\"",
@@ -40,7 +40,7 @@
     },
     "files": [
       "dist/**/*",
-      "main.js",
+      "main.cjs",
       "preload.js",
       ".env",
       "sounds/**/*",

@@ -1,15 +1,11 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import path from "path";
-import { fileURLToPath } from "url";
-import { exec } from "child_process";
-import fs from "fs";
-import dotenv from "dotenv";
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const path = require("path");
+const { exec } = require("child_process");
+const fs = require("fs");
+const dotenv = require("dotenv");
 
 dotenv.config();
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 let TTS_VOICE = "Microsoft Zira Desktop";
 let speechQueue = [];
@@ -220,10 +216,10 @@ async function connectTiktok(win, username) {
 
     await connection.connect();
     win.webContents.send("tiktok-status", { connected: true });
-    console.log(`✅ Connected to @${username}'s live`);
+    console.log(`Connected to @${username}'s live`);
 
   } catch (err) {
-    console.error("❌ Connect error:", err);
+    console.error("Connect error:", err);
     win.webContents.send("tiktok-event", {
       type: "error",
       message: `Failed to connect: ${err.message || err}`,
@@ -287,7 +283,7 @@ ipcMain.on("set-mute", (_event, value) => {
 ipcMain.on("connect-tiktok", (_event, username) => {
   const win = BrowserWindow.getFocusedWindow();
   if (win && username) {
-    console.log(`🔗 Connecting to @${username}...`);
+    console.log(`Connecting to @${username}...`);
     connectTiktok(win, username);
   } else if (win) {
     win.webContents.send("tiktok-event", {
