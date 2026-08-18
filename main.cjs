@@ -1,15 +1,11 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import path from "path";
-import { fileURLToPath } from "url";
-import { exec } from "child_process";
-import fs from "fs";
-import dotenv from "dotenv";
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const path = require("path");
+const { exec } = require("child_process");
+const fs = require("fs");
+const dotenv = require("dotenv");
 
 dotenv.config();
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 let TTS_VOICE = "Microsoft Zira Desktop";
 let speechQueue = [];
@@ -107,6 +103,20 @@ async function connectTiktok(win, username) {
       return false;
     }
 
+    const SHARE_SPAM_THRESHOLD = 5;
+    const SHARE_STREAK_RESET_MS = 60000;
+    const shareStreaks = new Map();
+    function isShareSpam(userKey) {
+      const now = Date.now();
+      const streak = shareStreaks.get(userKey) || { count: 0, last: 0 };
+      if (now - streak.last > SHARE_STREAK_RESET_MS) streak.count = 0;
+      streak.count += 1;
+      streak.last = now;
+      shareStreaks.set(userKey, streak);
+      if (shareStreaks.size > 3000) shareStreaks.delete(shareStreaks.keys().next().value);
+      return streak.count > SHARE_SPAM_THRESHOLD;
+    }
+
     connection.on("chat", (data) => {
       if (seen(data)) return;
       const user = data.nickname || data.uniqueId || "viewer";
@@ -138,22 +148,10 @@ async function connectTiktok(win, username) {
       if (seen(data)) return;
       const user = data.nickname || data.uniqueId || "viewer";
       win.webContents.send("tiktok-event", {
-        type: "follow",
+        type: "member",
         user,
         message: `${user} joined!`,
       });
-    });
-
-    connection.on("follow", (data) => {
-      if (seen(data)) return;
-      const user = data.nickname || data.uniqueId || "viewer";
-      const ttsName = safePsString(user) || data.uniqueId || "someone";
-      win.webContents.send("tiktok-event", {
-        type: "follow",
-        user,
-        message: `${user} followed!`,
-      });
-      enqueueSpeech(`Thank you ${ttsName} for the follow!`);
     });
 
     connection.on("social", (data) => {
@@ -175,13 +173,18 @@ async function connectTiktok(win, username) {
       } else if (isShare) {
         if (seen(data)) return;
         const user = data.nickname || data.uniqueId || "viewer";
-        const ttsName = safePsString(user) || data.uniqueId || "someone";
+        const userKey = data.uniqueId || user;
+        const spam = isShareSpam(userKey);
         win.webContents.send("tiktok-event", {
           type: "share",
           user,
           message: `${user} shared!`,
+          spam,
         });
-        enqueueSpeech(`Thank you ${ttsName} for the share!`);
+        if (!spam) {
+          const ttsName = safePsString(user) || data.uniqueId || "someone";
+          enqueueSpeech(`Thank you ${ttsName} for the share!`);
+        }
       }
     });
 
@@ -213,10 +216,10 @@ async function connectTiktok(win, username) {
 
     await connection.connect();
     win.webContents.send("tiktok-status", { connected: true });
-    console.log(`✅ Connected to @${username}'s live`);
+    console.log(`Connected to @${username}'s live`);
 
   } catch (err) {
-    console.error("❌ Connect error:", err);
+    console.error("Connect error:", err);
     win.webContents.send("tiktok-event", {
       type: "error",
       message: `Failed to connect: ${err.message || err}`,
@@ -228,6 +231,7 @@ async function connectTiktok(win, username) {
 
 function disconnectTiktok(win, notify = true) {
   if (tiktokConnection) {
+    try { tiktokConnection.removeAllListeners(); } catch (e) {}
     try { tiktokConnection.disconnect(); } catch (e) {}
     tiktokConnection = null;
   }
@@ -279,7 +283,7 @@ ipcMain.on("set-mute", (_event, value) => {
 ipcMain.on("connect-tiktok", (_event, username) => {
   const win = BrowserWindow.getFocusedWindow();
   if (win && username) {
-    console.log(`🔗 Connecting to @${username}...`);
+    console.log(`Connecting to @${username}...`);
     connectTiktok(win, username);
   } else if (win) {
     win.webContents.send("tiktok-event", {

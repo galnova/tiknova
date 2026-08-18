@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -55,6 +55,8 @@ function Home({ soundConfig }) {
   const [recentFollowers, setRecentFollowers] = useState([]);
   const [showTests, setShowTests] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const sessionStartRef = useRef(null);
 
   const EVENT_ICONS = {
     chat: "fa-comment",
@@ -68,7 +70,10 @@ function Home({ soundConfig }) {
 
   useEffect(() => {
     const eventHandler = (data) => {
-      setEvents((prev) => [data, ...prev].slice(0, 50));
+      const isSpamShare = data.type === "share" && data.spam;
+      if (!isSpamShare) {
+        setEvents((prev) => [data, ...prev].slice(0, 50));
+      }
 
       if (data.type === "error") {
         setError(data.msg || data.message);
@@ -84,7 +89,7 @@ function Home({ soundConfig }) {
       }
       if (data.type === "share") {
         setShareCount((prev) => prev + 1);
-        playAudio(soundConfig.share);
+        if (!isSpamShare) playAudio(soundConfig.share);
       }
       if (data.type === "gift") {
         playAudio(soundConfig[data.soundKey] || soundConfig.smallGift);
@@ -97,6 +102,9 @@ function Home({ soundConfig }) {
     const statusHandler = (data) => {
       setConnected(data.connected);
       if (!data.connected) {
+        if (sessionStartRef.current) {
+          setSessionDuration(Date.now() - sessionStartRef.current);
+        }
         setShowSummary(true);
       } else {
         setError(null);
@@ -200,12 +208,29 @@ function Home({ soundConfig }) {
     setShareCount(0);
     setChatCount(0);
     setRecentFollowers([]);
+    setSessionDuration(0);
+    sessionStartRef.current = Date.now();
   };
 
   const handleDisconnect = () => {
     window.electronAPI?.disconnectTiktok?.();
     setConnected(false);
+    if (sessionStartRef.current) {
+      setSessionDuration(Date.now() - sessionStartRef.current);
+    }
     setShowSummary(true);
+  };
+
+  const formatDuration = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const parts = [];
+    if (hours) parts.push(`${hours}h`);
+    if (hours || minutes) parts.push(`${minutes}m`);
+    parts.push(`${seconds}s`);
+    return parts.join(" ");
   };
 
   return (
@@ -404,6 +429,9 @@ function Home({ soundConfig }) {
             </button>
             <h2><i className="fas fa-chart-bar"></i> Session Summary</h2>
             <ul>
+              <li>
+                <i className="fas fa-clock"></i> Duration: {formatDuration(sessionDuration)}
+              </li>
               <li>
                 <i className="fas fa-heart"></i> Likes: {likeCount}
               </li>
