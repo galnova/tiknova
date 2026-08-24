@@ -42,7 +42,6 @@
       "dist/**/*",
       "main.cjs",
       "preload.js",
-      ".env",
       "sounds/**/*",
       "package.json"
     ],

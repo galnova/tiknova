@@ -1,10 +1,10 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const fs = require("fs");
 const dotenv = require("dotenv");
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
 let TTS_VOICE = "Microsoft Zira Desktop";
@@ -22,20 +22,29 @@ function safePsString(str = "") {
     .trim();
 }
 
+const TTS_SCRIPT =
+  "[Console]::InputEncoding = [System.Text.Encoding]::UTF8; " +
+  "$text = [Console]::In.ReadToEnd(); " +
+  "if (-not $text) { exit }; " +
+  "Add-Type -AssemblyName System.Speech; " +
+  "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
+  "try { $s.SelectVoice($env:NOVANOVA_TTS_VOICE) } catch {}; " +
+  "$s.Speak($text);";
+
 function speak(text) {
   return new Promise((resolve) => {
     const safe = safePsString(text);
     if (!safe) { resolve(); return; }
-    exec(
-      `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Speech; ` +
-        `$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; ` +
-        `$s.SelectVoice('${safePsString(TTS_VOICE)}'); ` +
-        `$s.Speak('${safe}');"`,
+    const child = execFile(
+      "powershell",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", TTS_SCRIPT],
+      { env: { ...process.env, NOVANOVA_TTS_VOICE: TTS_VOICE } },
       (err) => {
         if (err) console.error("TTS Error:", err);
         resolve();
       }
     );
+    child.stdin.end(safe, "utf8");
   });
 }
 
@@ -280,8 +289,8 @@ ipcMain.on("set-mute", (_event, value) => {
   isMuted = !!value;
 });
 
-ipcMain.on("connect-tiktok", (_event, username) => {
-  const win = BrowserWindow.getFocusedWindow();
+ipcMain.on("connect-tiktok", (event, username) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
   if (win && username) {
     console.log(`Connecting to @${username}...`);
     connectTiktok(win, username);
@@ -293,8 +302,8 @@ ipcMain.on("connect-tiktok", (_event, username) => {
   }
 });
 
-ipcMain.on("disconnect-tiktok", (_event) => {
-  const win = BrowserWindow.getFocusedWindow();
+ipcMain.on("disconnect-tiktok", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
   disconnectTiktok(win, true);
 });
 
