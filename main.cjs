@@ -138,7 +138,7 @@ async function connectTiktok(win, username) {
       });
       const ttsName = safePsString(user) || data.uniqueId || "someone";
       const ttsMsg = safePsString(msg);
-      if (ttsMsg) enqueueSpeech(`${ttsName} says ${ttsMsg}`);
+      enqueueSpeech(ttsMsg ? `${ttsName} says ${ttsMsg}` : `${ttsName} sent a message`);
     });
 
     connection.on("like", (data) => {
